@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Canvas6</title>
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Chewy" rel="stylesheet">
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
+</head>
+<body>
+
+<div class="wrapper">
+    <header>
+        <h2>The Amazing Blob Army</h2>
+    </header>
+
+    <div id="game">
+        <div class="loading">
+            <h4>Loading Game...</h4>
+        </div>
+        <canvas id="canvas"></canvas>
+        <div id="sidebar">
+            <section>
+                <h5>Stock</h5>
+                <ul class="stock">
+                    <li><span><img src="img/icon/coin.png"> Gold</span><span>10</span></li>
+                    <li><span><img src="img/icon/meat.png"> Meat</span><span>43</span></li>
+                    <li><span><img src="img/icon/log.png"> Wood</span><span>144</span></li>
+                    <li><span><img src="img/icon/herbs.png"> Herbs</span><span>3</span></li>
+                </ul>
+                <h5>Debug</h5>
+                <ul>
+                    <li><span class="fps">00</span><span>fps</span></li>
+                    <li class="hidden"><span class="memory">00</span><span>Memory</span></li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+    if(isChrome){
+        $(".memory").parent().show();
+        setInterval(function(){
+            $(".memory").text(window.performance.memory.totalJSHeapSize);
+        }, 1000);
+    }
+</script>
+<script src="js/script.js"></script>
+</body>
+</html>

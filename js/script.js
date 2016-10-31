@@ -169,6 +169,14 @@ game.tick = function(){
     game.fillRect(500 , 2500, 300, 300, "#000");
     game.fillRect(2500, 500 , 300, 300, "#000");
     game.fillRect(4500, 4500, 300, 300, "#000");
+    game.drawImage(game.images.gold_ore_small, 250-32, 250-32, 32, 32, "gold");
+    game.drawImage(game.images.gold_ore_large, 250, 250, 32, 32, "gold");
+    game.drawImage(game.images.gold_ore_large, 282, 250, 32, 32, "gold");
+    game.drawImage(game.images.silver_ore_large, 250, 282, 32, 32, "gold");
+    game.drawImage(game.images.gold_ore_small, 282, 282, 32, 32, "gold");
+    game.drawImage(game.images.gold_ore_small, 282, 282+32, 32, 32, "gold");
+    game.drawImage(game.images.gold_ore_small, 282+32, 282+32, 32, 32, "gold");
+
 
     game.$mousedown.text(game.mouse.down);
     game.$rightclick.text(game.mouse.rightclick);
@@ -196,6 +204,15 @@ game.draw_minimap_border = function(){
         game.minimap_context.stroke();
     game.minimap_context.closePath();
 };
+
+game.drawImage = function(img, x, y, w, h, c){
+    game.context.drawImage( img, x - game.viewport.x, y - game.viewport.y, w, h );
+    var nw = game.width / game.minimap.width;
+    var nh = game.height / game.minimap.height;
+
+    game.minimap_context.fillStyle = c || "#000";
+    game.minimap_context.fillRect(x / nw, y / nh, w / nw, h / nh);
+}
 
 game.fillRect = function(x, y, w, h, c){
     game.context.fillStyle = c;

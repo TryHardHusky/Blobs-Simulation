@@ -3,10 +3,11 @@ game.width              = 3000;
 game.height             = 3000;
 
 game.viewport           = {};
-game.viewport.x         = 0;
-game.viewport.y         = 0;
+game.viewport.x         = 555;
+game.viewport.y         = 555;
 game.viewport.height    = 700;
 game.viewport.width     = 700;
+game.viewport.speed     = 10;
 
 // Elements
 game.$minimap           = $("#minimap");
@@ -14,7 +15,6 @@ game.$canvas            = $("#canvas");
 game.$fps               = $(".fps");
 game.$mousepos          = $(".mousepos");
 game.$rightclick        = $(".rightclick");
-game.$mousedrag         = $(".mousedrag");
 game.$mousedown         = $(".mousedown");
 game.$splash            = $(".loading").find('h4');
 game.$loading           = $(".loading");
@@ -44,6 +44,13 @@ game.ready              = false;
 game.loading            = true;
 game.over               = true;
 
+game.keys               = {};
+game.keymap             = {};
+game.keymap.w           = 87;
+game.keymap.a           = 65;
+game.keymap.s           = 83;
+game.keymap.d           = 68;
+
 game.debug              = {};
 game.debug.fps          = 0;
 game.debug.lct          = Date.now();
@@ -62,14 +69,10 @@ game.minimap.height     = game.height;
 game.minimap_context    = game.minimap.getContext('2d');
 
 game.mouse              = {};
-game.mouse.drag         = {};
 game.mouse.rightclick   = false;
 game.mouse.down         = false;
-game.mouse.dragging     = false;
 game.mouse.x            = 0;
 game.mouse.y            = 0;
-game.mouse.drag.x       = 0;
-game.mouse.drag.y       = 0;
 
 game.init = function(){
     game.preload();
@@ -113,12 +116,39 @@ game.slow_tick = function(){
     game.$fps.text(game.debug.fps);
 };
 
-game.tick = function(){
-    game.debug.tick > game.debug.maxtick ? game.slow_tick() : game.debug.tick ++;
+game.check_input = function(){
+    if(game.keys[game.keymap.w]){ // UP
+        if(game.viewport.y - game.viewport.speed > 0) game.viewport.y -= game.viewport.speed;
+        else game.viewport.y = 0;
+    }
+    if(game.keys[game.keymap.s]){ // DOWN
+        if(game.viewport.y + game.viewport.speed < (game.height - game.viewport.height)) game.viewport.y += game.viewport.speed;
+        else game.viewport.y = (game.height - game.viewport.height);
+    }
+    if(game.keys[game.keymap.a]){ // LEFT
+        if(game.viewport.x - game.viewport.speed > 0) game.viewport.x -= game.viewport.speed;
+        else game.viewport.x = 0;
+    }
+    if(game.keys[game.keymap.d]){ // RIGHT
+        if(game.viewport.x + game.viewport.speed < (game.width - game.viewport.width)) game.viewport.x += game.viewport.speed;
+        else game.viewport.x = (game.width - game.viewport.width);
+    }
+    // Make sure there are no floats
+    game.viewport.x = Math.floor(game.viewport.x);
+    game.viewport.y = Math.floor(game.viewport.y);
+};
 
+game.tick = function(){
+    // Slow tick
+    game.debug.tick > game.debug.maxtick ? game.slow_tick() : game.debug.tick ++;
+    // Calculate FPS
     game.debug.delta = ( Date.now() - game.debug.lct ) / 1000;
     game.debug.lct = Date.now();
     game.debug.fps = (1 / game.debug.delta).toFixed(0);
+    // Handle keypresses for viewport movement
+    game.check_input();
+
+
 
 
     // Temp Shit
@@ -132,13 +162,12 @@ game.tick = function(){
 
     game.minimap_context.beginPath();
         game.minimap_context.strokeStyle = "#FFF";
-        game.minimap_context.lineWidth = 30;
+        game.minimap_context.lineWidth = 34.5;
         game.minimap_context.rect(Math.floor(game.viewport.x), Math.floor(game.viewport.y), game.viewport.width, game.viewport.height);
         game.minimap_context.stroke();
     game.minimap_context.closePath();
 
     game.$mousedown.text(game.mouse.down);
-    game.$mousedrag.text(game.mouse.dragging);
     game.$rightclick.text(game.mouse.rightclick);
     game.$viewport.text(
         game.viewport.x + "-" + (game.viewport.x + game.viewport.width) + " " +
@@ -174,10 +203,6 @@ game.$canvas.mousedown(function(e){
         game.mouse.rightclick = true;
     } else {
         game.mouse.down = true;
-        if(!game.mouse.dragging){
-            game.mouse.drag.x = game.mouse.x;
-            game.mouse.drag.y = game.mouse.y;
-        }
     }
 });
 
@@ -186,14 +211,11 @@ game.$canvas.mouseup(function(e){
         game.mouse.rightclick = false;
     } else {
         game.mouse.down = false ;
-        game.mouse.drag.x = game.mouse.x;
-        game.mouse.drag.y = game.mouse.y;
     }
 });
 
 game.$canvas.mouseout(function(e){
     game.mouse.down = false;
-    game.mouse.dragging = false;
     game.mouse.rightclick = false;
 });
 
@@ -201,19 +223,15 @@ game.$canvas.mousemove(function(e){
     var off = game.$canvas.offset();
     game.mouse.x = Math.floor(e.pageX - off.left);
     game.mouse.y = Math.floor(e.pageY - off.top);
-    if(game.mouse.down){
-        game.mouse.dragging = true;
-        var x = Math.floor(game.mouse.drag.x - game.mouse.x);
-        var y = Math.floor(game.mouse.drag.y - game.mouse.y);
-        game.mouse.drag.y = game.mouse.y;
-        game.mouse.drag.x = game.mouse.x;
-        if(game.viewport.y + y > -1 && game.viewport.y + y < (game.height - game.viewport.height + 1)) game.viewport.y += y;
-        if(game.viewport.x + x > -1 && game.viewport.x + x < (game.width  - game.viewport.width  + 1)) game.viewport.x += x;
-    } else {
-        game.mouse.dragging = false;
-    }
     game.$mousepos.text(game.mouse.x + "," + game.mouse.y);
 });
+
+document.onkeydown = function(e){
+    game.keys[e.keyCode] = true;
+}
+document.onkeyup = function(e){
+    game.keys[e.keyCode] = false;
+}
 
 // Start!
 game.init();

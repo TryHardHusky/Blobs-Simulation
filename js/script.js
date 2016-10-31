@@ -2,9 +2,17 @@ var game                = {};
 game.width              = 3000;
 game.height             = 3000;
 
+game.viewport           = {};
+game.viewport.height    = 700;
+game.viewport.width     = 700;
+
 // Elements
 game.$canvas            = $("#canvas");
 game.$fps               = $(".fps");
+game.$mousepos          = $(".mousepos");
+game.$rightclick        = $(".rightclick");
+game.$mousedrag         = $(".mousedrag");
+game.$mousedown         = $(".mousedown");
 game.$splash            = $(".loading").find('h4');
 game.$loading           = $(".loading");
 
@@ -40,13 +48,15 @@ game.debug.tick         = 0;
 game.debug.maxtick      = 50;
 
 game.canvas             = game.$canvas[0];
-game.canvas.width       = game.width;
-game.canvas.height      = game.height;
+game.canvas.width       = game.viewport.width;
+game.canvas.height      = game.viewport.height;
 game.context            = game.canvas.getContext('2d');
 
 game.mouse              = {};
 game.mouse.drag         = {};
+game.mouse.rightclick   = false;
 game.mouse.down         = false;
+game.mouse.dragging     = false;
 game.mouse.x            = 0;
 game.mouse.y            = 0;
 game.mouse.drag.x       = 0;
@@ -101,6 +111,28 @@ game.tick = function(){
     game.debug.lct = Date.now();
     game.debug.fps = (1 / game.debug.delta).toFixed(0);
 
+
+    // Temp Shit
+    game.context.clearRect(0,0,game.width, game.height);
+    if(game.mouse.down && game.mouse.dragging){
+        game.context.beginPath();
+            game.context.fillStyle = "rgba(0,0,0,.1)";
+            game.context.strokeStyle = "#FFF";
+            game.context.rect(game.mouse.drag.x, game.mouse.drag.y, Math.floor(game.mouse.x - game.mouse.drag.x), Math.floor(game.mouse.y - game.mouse.drag.y));
+            game.context.fill();
+            game.context.stroke();
+        game.context.closePath();
+    } else if(game.mouse.down && !game.mouse.dragging){
+        game.context.beginPath();
+            game.context.fillStyle = "rgba(100,100,255,0.5)";
+            game.context.arc(game.mouse.x, game.mouse.y, 10, 0, Math.PI * 2, true);
+            game.context.fill();
+        game.context.closePath();
+    }
+    game.$mousedown.text(game.mouse.down);
+    game.$mousedrag.text(game.mouse.dragging);
+    game.$rightclick.text(game.mouse.rightclick);
+    // End Temp Shit
     requestAnimationFrame(game.tick);
 };
 
@@ -124,6 +156,40 @@ window.requestAnimFrame = (function() {
     window.mozRequestAnimationFrame ||
     function(c) {window.setTimeout(c, 0);};
 })();
+
+game.$canvas.mousedown(function(e){
+    if(e.button == 2){
+        game.mouse.rightclick = true;
+    } else {
+        game.mouse.down = true;
+        if(!game.mouse.dragging){
+            game.mouse.drag.x = game.mouse.x;
+            game.mouse.drag.y = game.mouse.y;
+        }
+    }
+});
+
+game.$canvas.mouseup(function(e){
+    if(e.button == 2){
+        game.mouse.rightclick = false;
+    } else {
+        game.mouse.down = false ;
+        game.mouse.drag.x = game.mouse.x;
+        game.mouse.drag.y = game.mouse.y;
+    }
+});
+
+game.$canvas.mousemove(function(e){
+    var off = game.$canvas.offset();
+    game.mouse.x = Math.floor(e.pageX - off.left);
+    game.mouse.y = Math.floor(e.pageY - off.top);
+    if(game.mouse.down && game.mouse.drag.x != game.mouse.x && game.mouse.drag.y != game.mouse.y){
+        game.mouse.dragging = true;
+    } else {
+        game.mouse.dragging = false;
+    }
+    game.$mousepos.text(game.mouse.x + "," + game.mouse.y);
+});
 
 // Start!
 game.init();

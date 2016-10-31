@@ -5,6 +5,15 @@ body, html{
     color: #CCC;
 }
 
+*:not(input){
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 .wrapper{
     font-size: 0;
     width: 1000px;
@@ -51,6 +60,7 @@ body, html{
 }
 
 #canvas{
+    cursor: pointer;
     background: #262626;
     width: 700px;
     height: 700px;

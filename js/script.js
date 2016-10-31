@@ -8,6 +8,8 @@ game.viewport.y         = 555;
 game.viewport.height    = 700;
 game.viewport.width     = 700;
 game.viewport.speed     = 10;
+game.viewport._speed    = game.viewport.speed;
+game.viewport.boost     = 3;
 
 // Elements
 game.$minimap           = $("#minimap");
@@ -50,6 +52,7 @@ game.keymap.w           = 87;
 game.keymap.a           = 65;
 game.keymap.s           = 83;
 game.keymap.d           = 68;
+game.keymap.shift       = 16;
 
 game.debug              = {};
 game.debug.fps          = 0;
@@ -117,6 +120,13 @@ game.slow_tick = function(){
 };
 
 game.check_input = function(){
+    if(game.keys[game.keymap.shift]){ // Double speed
+        if(game.viewport.speed != (game.viewport._speed * game.viewport.boost)){
+            game.viewport.speed *= game.viewport.boost;
+        }
+    } else {
+        game.viewport.speed = game.viewport._speed;
+    }
     if(game.keys[game.keymap.w]){ // UP
         if(game.viewport.y - game.viewport.speed > 0) game.viewport.y -= game.viewport.speed;
         else game.viewport.y = 0;
@@ -147,25 +157,18 @@ game.tick = function(){
     game.debug.fps = (1 / game.debug.delta).toFixed(0);
     // Handle keypresses for viewport movement
     game.check_input();
-
+    game.draw();
 
 
 
     // Temp Shit
     game.context.clearRect(0,0,game.canvas.width, game.canvas.height);
-    game.minimap_context.clearRect(0, 0, game.minimap.width, game.minimap.height);
 
     game.context.fillStyle = "#000";
     game.minimap_context.fillStyle = "#000";
     game.context.fillRect(500 - game.viewport.x, 500 - game.viewport.y, 300, 300);
     game.minimap_context.fillRect(500, 500, 300, 300);
 
-    game.minimap_context.beginPath();
-        game.minimap_context.strokeStyle = "#FFF";
-        game.minimap_context.lineWidth = 34.5;
-        game.minimap_context.rect(Math.floor(game.viewport.x), Math.floor(game.viewport.y), game.viewport.width, game.viewport.height);
-        game.minimap_context.stroke();
-    game.minimap_context.closePath();
 
     game.$mousedown.text(game.mouse.down);
     game.$rightclick.text(game.mouse.rightclick);
@@ -175,6 +178,16 @@ game.tick = function(){
     );
     // End Temp Shit
     requestAnimationFrame(game.tick);
+};
+
+game.draw = function(){
+    game.minimap_context.clearRect(0, 0, game.minimap.width, game.minimap.height);
+    game.minimap_context.beginPath();
+        game.minimap_context.strokeStyle = "#FFF";
+        game.minimap_context.lineWidth = 34.5;
+        game.minimap_context.rect(Math.floor(game.viewport.x), Math.floor(game.viewport.y), game.viewport.width, game.viewport.height);
+        game.minimap_context.stroke();
+    game.minimap_context.closePath();
 };
 
 // Extra Useful Functions

@@ -1,10 +1,10 @@
 var game                = {};
-game.width              = 3000;
-game.height             = 3000;
+game.width              = 5000;
+game.height             = 5000;
 
 game.viewport           = {};
-game.viewport.x         = 555;
-game.viewport.y         = 555;
+game.viewport.x         = 0;
+game.viewport.y         = 0;
 game.viewport.height    = 700;
 game.viewport.width     = 700;
 game.viewport.speed     = 10;
@@ -67,8 +67,8 @@ game.canvas.height      = game.viewport.height;
 game.context            = game.canvas.getContext('2d');
 
 game.minimap            = game.$minimap[0];
-game.minimap.width      = game.width;
-game.minimap.height     = game.height;
+game.minimap.width      = 140;
+game.minimap.height     = 140;
 game.minimap_context    = game.minimap.getContext('2d');
 
 game.mouse              = {};
@@ -157,18 +157,18 @@ game.tick = function(){
     game.debug.fps = (1 / game.debug.delta).toFixed(0);
     // Handle keypresses for viewport movement
     game.check_input();
-    game.draw();
 
 
 
     // Temp Shit
     game.context.clearRect(0,0,game.canvas.width, game.canvas.height);
+    game.minimap_context.clearRect(0, 0, game.minimap.width, game.minimap.height);
 
-    game.context.fillStyle = "#000";
-    game.minimap_context.fillStyle = "#000";
-    game.context.fillRect(500 - game.viewport.x, 500 - game.viewport.y, 300, 300);
-    game.minimap_context.fillRect(500, 500, 300, 300);
-
+    game.fillRect(500 , 500 , 300, 300, "#000");
+    game.fillRect(2500, 2500, 300, 300, "#000");
+    game.fillRect(500 , 2500, 300, 300, "#000");
+    game.fillRect(2500, 500 , 300, 300, "#000");
+    game.fillRect(4500, 4500, 300, 300, "#000");
 
     game.$mousedown.text(game.mouse.down);
     game.$rightclick.text(game.mouse.rightclick);
@@ -176,19 +176,46 @@ game.tick = function(){
         game.viewport.x + "-" + (game.viewport.x + game.viewport.width) + " " +
         game.viewport.y + "-" + (game.viewport.y + game.viewport.height)
     );
+
+    game.draw_minimap_border();
     // End Temp Shit
     requestAnimationFrame(game.tick);
 };
 
-game.draw = function(){
-    game.minimap_context.clearRect(0, 0, game.minimap.width, game.minimap.height);
+game.draw_minimap_border = function(){
+    var nw = game.width / game.minimap.width;
+    var nh = game.height / game.minimap.height;
+    game.minimap_context.beginPath();
+        game.minimap_context.strokeStyle = "#000";
+        game.minimap_context.rect(
+            game.viewport.x / nw,
+            game.viewport.y / nh,
+            game.viewport.width / nw,
+            game.viewport.height / nh
+        );
+        game.minimap_context.stroke();
+    game.minimap_context.closePath();
+};
+
+game.fillRect = function(x, y, w, h, c){
+    game.context.fillStyle = c;
+    game.context.fillRect(x - game.viewport.x, y - game.viewport.y, w, h);
+
+    var nw = game.width / game.minimap.width;
+    var nh = game.height / game.minimap.height;
+
+    game.minimap_context.fillStyle = c;
+    game.minimap_context.fillRect(x / nw, y / nh, w / nw, h / nh);
+}
+
+/*game.draw = function(){
     game.minimap_context.beginPath();
         game.minimap_context.strokeStyle = "#FFF";
         game.minimap_context.lineWidth = 34.5;
         game.minimap_context.rect(Math.floor(game.viewport.x), Math.floor(game.viewport.y), game.viewport.width, game.viewport.height);
         game.minimap_context.stroke();
     game.minimap_context.closePath();
-};
+};*/
 
 // Extra Useful Functions
 game.obk = function(obj){

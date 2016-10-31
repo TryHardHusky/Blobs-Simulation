@@ -3,10 +3,13 @@ game.width              = 3000;
 game.height             = 3000;
 
 game.viewport           = {};
+game.viewport.x         = 0;
+game.viewport.y         = 0;
 game.viewport.height    = 700;
 game.viewport.width     = 700;
 
 // Elements
+game.$minimap           = $("#minimap");
 game.$canvas            = $("#canvas");
 game.$fps               = $(".fps");
 game.$mousepos          = $(".mousepos");
@@ -15,6 +18,7 @@ game.$mousedrag         = $(".mousedrag");
 game.$mousedown         = $(".mousedown");
 game.$splash            = $(".loading").find('h4');
 game.$loading           = $(".loading");
+game.$viewport          = $(".viewport");
 
 game.paths              = {};
 game.paths.images       = "img/";
@@ -52,6 +56,11 @@ game.canvas.width       = game.viewport.width;
 game.canvas.height      = game.viewport.height;
 game.context            = game.canvas.getContext('2d');
 
+game.minimap            = game.$minimap[0];
+game.minimap.width      = game.width;
+game.minimap.height     = game.height;
+game.minimap_context    = game.minimap.getContext('2d');
+
 game.mouse              = {};
 game.mouse.drag         = {};
 game.mouse.rightclick   = false;
@@ -80,7 +89,7 @@ game.preload = function(){
             if( game.obl( game.images ) == game.obl( loaded ) ){
                 return setTimeout(function(){
                     game.preload_complete()
-                }, 1000);
+                }, 100);
             }
         };
         image.onerror = function(){
@@ -113,25 +122,28 @@ game.tick = function(){
 
 
     // Temp Shit
-    game.context.clearRect(0,0,game.width, game.height);
-    if(game.mouse.down && game.mouse.dragging){
-        game.context.beginPath();
-            game.context.fillStyle = "rgba(0,0,0,.1)";
-            game.context.strokeStyle = "#FFF";
-            game.context.rect(game.mouse.drag.x, game.mouse.drag.y, Math.floor(game.mouse.x - game.mouse.drag.x), Math.floor(game.mouse.y - game.mouse.drag.y));
-            game.context.fill();
-            game.context.stroke();
-        game.context.closePath();
-    } else if(game.mouse.down && !game.mouse.dragging){
-        game.context.beginPath();
-            game.context.fillStyle = "rgba(100,100,255,0.5)";
-            game.context.arc(game.mouse.x, game.mouse.y, 10, 0, Math.PI * 2, true);
-            game.context.fill();
-        game.context.closePath();
-    }
+    game.context.clearRect(0,0,game.canvas.width, game.canvas.height);
+    game.minimap_context.clearRect(0, 0, game.minimap.width, game.minimap.height);
+
+    game.context.fillStyle = "#000";
+    game.minimap_context.fillStyle = "#000";
+    game.context.fillRect(500 - game.viewport.x, 500 - game.viewport.y, 300, 300);
+    game.minimap_context.fillRect(500, 500, 300, 300);
+
+    game.minimap_context.beginPath();
+        game.minimap_context.strokeStyle = "#FFF";
+        game.minimap_context.lineWidth = 30;
+        game.minimap_context.rect(Math.floor(game.viewport.x), Math.floor(game.viewport.y), game.viewport.width, game.viewport.height);
+        game.minimap_context.stroke();
+    game.minimap_context.closePath();
+
     game.$mousedown.text(game.mouse.down);
     game.$mousedrag.text(game.mouse.dragging);
     game.$rightclick.text(game.mouse.rightclick);
+    game.$viewport.text(
+        game.viewport.x + "-" + (game.viewport.x + game.viewport.width) + " " +
+        game.viewport.y + "-" + (game.viewport.y + game.viewport.height)
+    );
     // End Temp Shit
     requestAnimationFrame(game.tick);
 };
@@ -179,12 +191,24 @@ game.$canvas.mouseup(function(e){
     }
 });
 
+game.$canvas.mouseout(function(e){
+    game.mouse.down = false;
+    game.mouse.dragging = false;
+    game.mouse.rightclick = false;
+});
+
 game.$canvas.mousemove(function(e){
     var off = game.$canvas.offset();
     game.mouse.x = Math.floor(e.pageX - off.left);
     game.mouse.y = Math.floor(e.pageY - off.top);
-    if(game.mouse.down && game.mouse.drag.x != game.mouse.x && game.mouse.drag.y != game.mouse.y){
+    if(game.mouse.down){
         game.mouse.dragging = true;
+        var x = Math.floor(game.mouse.drag.x - game.mouse.x);
+        var y = Math.floor(game.mouse.drag.y - game.mouse.y);
+        game.mouse.drag.y = game.mouse.y;
+        game.mouse.drag.x = game.mouse.x;
+        if(game.viewport.y + y > -1 && game.viewport.y + y < (game.height - game.viewport.height + 1)) game.viewport.y += y;
+        if(game.viewport.x + x > -1 && game.viewport.x + x < (game.width  - game.viewport.width  + 1)) game.viewport.x += x;
     } else {
         game.mouse.dragging = false;
     }

@@ -60,13 +60,23 @@ body, html{
 }
 
 #canvas{
+    z-index: 1;
     cursor: pointer;
-    background: #262626;
     width: 700px;
     height: 700px;
     border: solid 1px #000;
-    background: url(../img/grass.jpg);
-    background-size: 32px 32px;
+}
+
+#minimap{
+    z-index: 2;
+    opacity: 0.3;
+    width: 140px;
+    height: 140px;
+    border: solid 1px #FFF;
+    position: absolute;
+    top: 10px;
+    left: 550px;
+    pointer-events: none;
 }
 
 #sidebar{

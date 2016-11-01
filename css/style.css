@@ -151,3 +151,48 @@ body, html{
 #sidebar section .hidden{
     display: none;
 }
+
+#sidebar section.selected {
+    width: 258px;
+    height: 42px;
+    background: rgba(255, 255, 255, .1);
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 5px;
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+    font-size: 0;
+    display: none;
+}
+
+#sidebar section.selected img{
+    display: inline-block;
+    width: 32px;
+}
+
+#sidebar section.selected .desc{
+    font-size: 10px;
+    display: inline-block;
+    padding: 5px;
+    vertical-align: top;
+}
+
+#sidebar section.selected .desc h4{
+    color: #FFF;
+    font-weight: 100;
+    font-size: 15px;
+}
+
+#sidebar section.selected .workers{
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 10px;
+}
+
+#sidebar section.selected .workers i{
+    font-size: 9px;
+}

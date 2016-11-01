@@ -2,8 +2,8 @@ var game                = {};
 game.tile               = {};
 game.tile.size          = 32;
 
-game.colcount           = 150;
-game.rowcount           = 150;
+game.colcount           = 50;
+game.rowcount           = 50;
 game.tilecount          = game.colcount * game.rowcount;
 
 game.width              = Math.floor(game.colcount * game.tile.size);
@@ -31,11 +31,13 @@ game.$zonebg            = $("#zonebg");
 game.$canvas            = $("#canvas");
 game.$fps               = $(".fps");
 game.$mousepos          = $(".mousepos");
+game.$mousecords        = $(".mousecords");
 game.$rightclick        = $(".rightclick");
 game.$mousedown         = $(".mousedown");
 game.$splash            = $(".loading").find('h4');
 game.$loading           = $(".loading");
 game.$viewport          = $(".viewport");
+game.$selected          = $("section.selected");
 
 game.paths              = {};
 game.paths.images       = "img/";
@@ -44,7 +46,11 @@ game.paths.icons        = "img/icon/";
 game.load_messages      = ["Constructing Blobs", "Downloading Cars", "Repairing Houses", "Shooing Dragons", "Mining Ores", "Extinguishing Fires", "Banishing Demons", "Rigging RNG", "Hacking Pentagon", "Inhaling Helium", "Contemplating Life", "Inflating Balloons", "Winning Arguments", "Exploring Dungeons", "Following Rainbows", "Grinding Mobs", "Looting Bodies", "Chopping Trees", "Smashing Rocks", "Playing Minecraft", "Punching Trees", "Disliking Videos", "Playing Music", "Inventing Fire"];
 game.images             = {};
 
-game.images.grass               = "grass.jpg";
+game.images.grass_dark          = "grass_dark.png";
+game.images.cracked_earth       = "cracked_earth.png";
+game.images.grass_light         = "grass_light.png";
+game.images.dirt_dark           = "dirt_dark.png";
+game.images.dirt_light          = "dirt_light.png";
 game.images.crater              = "crater.png";
 game.images.bush_small          = "bush_small.png";
 game.images.gold_ore_small      = "gold_ore_small.png";
@@ -96,6 +102,20 @@ game.mouse.rightclick   = false;
 game.mouse.down         = false;
 game.mouse.x            = 0;
 game.mouse.y            = 0;
+game.mouse.tx           = 0;
+game.mouse.ty           = 0;
+game.mouse.selected     = {};
+game.mouse.selected.x   = -1;
+game.mouse.selected.y   = -1;
+
+game.tileimg = {
+    0 : null,
+    1 : "gold_ore_small",
+    2 : "gold_ore_large",
+    3 : "silver_ore_small",
+    4 : "silver_ore_large",
+    5 : "bush_small"
+};
 
 game.tiles                  = {};
 game.tiles.none             = 0;
@@ -112,10 +132,22 @@ game.init = function(){
         game.buildings[c] = [];
         for(var r = 0; r < game.rowcount; r++){
             game.map[c][r] = 0;
-            game.objects[c][r] = 0;
+            game.objects[c][r] = {};
             game.buildings[c][r] = 0;
         }
     }
+
+    game.objects[5][5] = new _resource(game.tiles.gold_ore_large);
+    game.objects[6][6] = new _resource(game.tiles.gold_ore_large);
+    game.objects[6][5] = new _resource(game.tiles.silver_ore_large);
+    game.objects[5][6] = new _resource(game.tiles.gold_ore_large);
+
+    /*
+    game.objects[7][7] = game.tiles.silver_ore_large;
+    game.objects[45][29] = game.tiles.gold_ore_small;
+    game.objects[29][45] = game.tiles.gold_ore_small;
+     */
+
     game.preload();
 };
 
@@ -186,12 +218,15 @@ game.check_input = function(){
     game.viewport.y = Math.floor(game.viewport.y);
 };
 
-game.draw_background = function(){
+game.draw = function(){
+    var nw = game.width / game.minimap.width;
+    var nh = game.height / game.minimap.height;
     game.zone_ctx.clearRect(0, 0, game.zone.width, game.zone.height);
+
     for(var c = 0; c < game.colcount; c++){
         for(var r = 0; r < game.rowcount; r++){
             game.zone_ctx.drawImage(
-                game.images.grass,
+                game.images.grass_dark,
                 0,
                 0,
                 game.tile.size,
@@ -202,9 +237,9 @@ game.draw_background = function(){
                 game.tile.size
             );
             var tile = game.objects[c][r];
-            if(tile == game.tiles.gold_ore_large){
+            if(game.tileimg[tile.type] != null){
                 game.context.drawImage(
-                    game.images.gold_ore_large,
+                    game.images[ game.tileimg[tile.type] ],
                     0,
                     0,
                     game.tile.size,
@@ -213,17 +248,10 @@ game.draw_background = function(){
                     -(game.viewport.y) + (r * game.tile.size),
                     game.tile.size,
                     game.tile.size
-                )
-            }
-            else if(tile == game.tiles.gold_ore_small){
-                game.context.drawImage(
-                    game.images.gold_ore_small,
-                    0,
-                    0,
-                    game.tile.size,
-                    game.tile.size,
-                    -(game.viewport.x) + (c * game.tile.size),
-                    -(game.viewport.y) + (r * game.tile.size),
+                );
+                game.fillRect(
+                    (c * game.tile.size),
+                    (r * game.tile.size),
                     game.tile.size,
                     game.tile.size
                 )
@@ -248,17 +276,11 @@ game.tick = function(){
     game.context.clearRect(0,0,game.canvas.width, game.canvas.height);
     game.minimap_context.clearRect(0, 0, game.minimap.width, game.minimap.height);
 
-    game.draw_background();
-
-    game.objects[5][5] = game.tiles.gold_ore_large;
-    game.objects[6][6] = game.tiles.gold_ore_large;
-    game.objects[6][5] = game.tiles.gold_ore_large;
-    game.objects[5][6] = game.tiles.gold_ore_small;
-    game.objects[140][140] = game.tiles.gold_ore_small;
-    game.objects[149][149] = game.tiles.gold_ore_small;
+    game.draw();
 
     game.$mousedown.text(game.mouse.down);
     game.$rightclick.text(game.mouse.rightclick);
+    game.$mousecords.text(game.mouse.tx + "," + game.mouse.ty);
     game.$viewport.text(
         game.viewport.x + "-" + (game.viewport.x + game.viewport.width) + " " +
         game.viewport.y + "-" + (game.viewport.y + game.viewport.height)
@@ -293,12 +315,30 @@ game.drawImage = function(img, x, y, w, h, c){
 }
 
 game.fillRect = function(x, y, w, h, c){
-    game.context.fillStyle = c;
-    game.context.fillRect(x - game.viewport.x, y - game.viewport.y, w, h);
     var nw = game.width / game.minimap.width;
     var nh = game.height / game.minimap.height;
     game.minimap_context.fillStyle = c;
     game.minimap_context.fillRect(x / nw, y / nh, w / nw, h / nh);
+}
+
+// Classes
+function _resource(type){
+    if(type == game.tiles.gold_ore_large){
+        this.name  = "Gold Ore";
+        this.type  = game.tiles.gold_ore_large;
+        this.image = game.paths.images + game.images.gold_ore_large;
+        this.res  = Math.floor(Math.random() * 5021);
+        this.resname = "Gold";
+        this.id    = "#" + Math.floor(Math.random() * 99999);
+    }
+    else if(type == game.tiles.silver_ore_large){
+        this.name   = "Silver Ore";
+        this.type   = game.tiles.silver_ore_large;
+        this.image  = game.paths.images + game.images.silver_ore_large;
+        this.res = Math.floor(Math.random() * 100);
+        this.resname = "Silver";
+        this.id     = "#" + Math.floor(Math.random() * 99999);
+    }
 }
 
 // Extra Useful Functions
@@ -345,9 +385,33 @@ game.$canvas.mouseout(function(e){
 
 game.$canvas.mousemove(function(e){
     var off = game.$canvas.offset();
-    game.mouse.x = Math.floor(e.pageX - off.left);
-    game.mouse.y = Math.floor(e.pageY - off.top);
+    game.mouse.x = Math.floor(e.pageX - off.left) + (game.viewport.x);
+    game.mouse.y = Math.floor(e.pageY - off.top)  + (game.viewport.y);
+
+    game.mouse.tx = Math.floor(game.mouse.x / game.tile.size);
+    game.mouse.ty = Math.floor(game.mouse.y / game.tile.size);
+
     game.$mousepos.text(game.mouse.x + "," + game.mouse.y);
+});
+
+game.$canvas.click(function(){
+    var tile = game.objects[game.mouse.tx][game.mouse.ty];
+    if(game.obl(tile) > 0){
+        game.mouse.selected = {
+            x : game.mouse.tx,
+            y : game.mouse.ty
+        };
+        if(game.$selected.css("display") == "none") game.$selected.show();
+        game.$selected.find(".count").text(tile.res + " " + tile.resname + " Remaining");
+        game.$selected.find('h4').text(tile.name + " " + tile.id);
+        game.$selected.find('img').attr('src', tile.image);
+    } else {
+        game.$selected.hide();
+        game.mouse.selected = {
+            x : -1,
+            y : -1
+        };
+    }
 });
 
 document.onkeydown = function(e){

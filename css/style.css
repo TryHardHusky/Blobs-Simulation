@@ -39,6 +39,18 @@ body, html{
     position: relative;
 }
 
+#zonebg{
+    z-index: 1;
+    cursor: pointer;
+    width: 700px;
+    height: 700px;
+    border: solid 1px #000;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #054212;
+}
+
 #game .loading{
     color: #CCC;
     font-size: 15px;
@@ -60,15 +72,16 @@ body, html{
 }
 
 #canvas{
-    z-index: 1;
+    z-index: 4;
     cursor: pointer;
     width: 700px;
     height: 700px;
     border: solid 1px #000;
+    position: relative;
 }
 
 #minimap{
-    z-index: 2;
+    z-index: 5;
     opacity: 0.3;
     width: 140px;
     height: 140px;

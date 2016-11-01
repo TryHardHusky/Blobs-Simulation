@@ -168,7 +168,6 @@ game.tiles.bush_small = {
     color: "#007300"
 };
 
-
 game.tileimg = {
     0 : null,
     1 : "gold_ore_small",
@@ -178,6 +177,37 @@ game.tileimg = {
     5 : "bush_small"
 };
 
+game.clusters = {};
+game.clusters.gold_a = [
+    [0,1,0],
+    [1,1,2],
+    [2,2,0]
+];
+game.clusters.gold_b = [
+    [0,0,0],
+    [0,1,0],
+    [0,1,0]
+];
+game.clusters.gold_c = [
+    [0,0,0],
+    [0,1,1],
+    [0,0,0]
+];
+game.clusters.silver_a = [
+    [3,3,3],
+    [0,4,0],
+    [0,3,0]
+];
+game.clusters.silver_b = [
+    [0,4,3],
+    [4,4,3],
+    [4,4,0]
+];
+game.clusters.silver_c = [
+    [0,0,0],
+    [4,3,0],
+    [0,0,0]
+];
 
 game.init = function(){
     for(var c = 0;c < game.colcount; c++){
@@ -191,27 +221,49 @@ game.init = function(){
         }
     }
 
-    var loop = 250;
+    var loop = 100;
     for(var i = 0; i < loop; i++){
-        var q = game.rand(1, 5);
-        var x = game.rand(1, game.rowcount-1);
-        var y = game.rand(1, game.colcount-1);
-        switch(q){
+        var o = game.rand(1, 6);
+        var x = game.rand(0, game.rowcount);
+        var y = game.rand(0, game.colcount);
+        switch(o){
             case 1:
-                game.objects[x][y] = new _resource(game.tiles.gold_ore_large);break;
+                game.spawn_cluster(x, y, game.clusters.gold_a);break;
             case 2:
-                game.objects[x][y] = new _resource(game.tiles.gold_ore_small);break;
+                game.spawn_cluster(x, y, game.clusters.gold_b);break;
             case 3:
-                game.objects[x][y] = new _resource(game.tiles.silver_ore_large);break;
+                game.spawn_cluster(x, y, game.clusters.silver_a);break;
             case 4:
-                game.objects[x][y] = new _resource(game.tiles.silver_ore_small);break;
+                game.spawn_cluster(x, y, game.clusters.silver_b);break;
             case 5:
-                game.objects[x][y] = new _resource(game.tiles.bush_small);break;
-
+                game.spawn_cluster(x, y, game.clusters.gold_c);break;
+            case 6:
+                game.spawn_cluster(x, y, game.clusters.silver_c);break;
         }
+
     }
 
     game.preload();
+};
+
+game.spawn_cluster = function(ox, oy, pattern){
+    for(var col in pattern){
+        for(var row in pattern[col]){
+            var x = ox - row + 1;
+            var y = oy - col + 1;
+            if(pattern[col][row] != 0 && game.can_spawn(x,y)){
+                game.objects[x][y] = new _resource(game.tiles[ game.tileimg[ pattern[col][row] ] ]);
+            }
+        }
+    }
+}
+
+game.can_spawn  = function(x, y){
+    try{
+        return game.obl(game.objects[x][y]) === 0;
+    } catch(e) {
+        return false;
+    }
 };
 
 // Preload
@@ -488,14 +540,6 @@ game.$canvas.mousemove(function(e){
 game.$canvas.click(function(){
     var tile = game.objects[game.mouse.tx][game.mouse.ty];
     if(game.obl(tile) > 0){
-
-        if(tile.stock - 1 > -1){
-            tile.stock--;
-            game.stock[tile.resname] += 1;
-        } else {
-            game.objects[game.mouse.tx][game.mouse.ty] = {};
-        }
-
         game.mouse.selected = {
             x : game.mouse.tx,
             y : game.mouse.ty

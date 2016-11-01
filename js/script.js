@@ -97,6 +97,14 @@ game.mouse.down         = false;
 game.mouse.x            = 0;
 game.mouse.y            = 0;
 
+game.tiles                  = {};
+game.tiles.none             = 0;
+game.tiles.gold_ore_small   = 1;
+game.tiles.gold_ore_large   = 2;
+game.tiles.silver_ore_small = 3;
+game.tiles.silver_ore_large = 4;
+game.tiles.bush_small       = 5;
+
 game.init = function(){
     for(var c = 0;c < game.colcount; c++){
         game.map[c] = [];
@@ -179,7 +187,6 @@ game.check_input = function(){
 };
 
 game.draw_background = function(){
-    if(game.viewport.x == game.viewport.old.x && game.viewport.y == game.viewport.old.y) return;
     game.zone_ctx.clearRect(0, 0, game.zone.width, game.zone.height);
     for(var c = 0; c < game.colcount; c++){
         for(var r = 0; r < game.rowcount; r++){
@@ -187,13 +194,40 @@ game.draw_background = function(){
                 game.images.grass,
                 0,
                 0,
-                32,
-                32,
-                -(game.viewport.x) + (c * 32),
-                -(game.viewport.y) + (r * 32),
-                32,
-                32
+                game.tile.size,
+                game.tile.size,
+                -(game.viewport.x) + (c * game.tile.size),
+                -(game.viewport.y) + (r * game.tile.size),
+                game.tile.size,
+                game.tile.size
             );
+            var tile = game.objects[c][r];
+            if(tile == game.tiles.gold_ore_large){
+                game.context.drawImage(
+                    game.images.gold_ore_large,
+                    0,
+                    0,
+                    game.tile.size,
+                    game.tile.size,
+                    -(game.viewport.x) + (c * game.tile.size),
+                    -(game.viewport.y) + (r * game.tile.size),
+                    game.tile.size,
+                    game.tile.size
+                )
+            }
+            else if(tile == game.tiles.gold_ore_small){
+                game.context.drawImage(
+                    game.images.gold_ore_small,
+                    0,
+                    0,
+                    game.tile.size,
+                    game.tile.size,
+                    -(game.viewport.x) + (c * game.tile.size),
+                    -(game.viewport.y) + (r * game.tile.size),
+                    game.tile.size,
+                    game.tile.size
+                )
+            }
         }
     }
     game.viewport.old.x = game.viewport.x;
@@ -216,18 +250,12 @@ game.tick = function(){
 
     game.draw_background();
 
-    game.fillRect(500 , 500 , 300, 300, "#000");
-    game.fillRect(2500, 2500, 300, 300, "#000");
-    game.fillRect(500 , 2500, 300, 300, "#000");
-    game.fillRect(2500, 500 , 300, 300, "#000");
-    game.fillRect(4500, 4500, 300, 300, "#000");
-    game.drawImage(game.images.gold_ore_small, 250-32, 250-32, 32, 32, "gold");
-    game.drawImage(game.images.gold_ore_large, 250, 250, 32, 32, "gold");
-    game.drawImage(game.images.gold_ore_large, 282, 250, 32, 32, "gold");
-    game.drawImage(game.images.silver_ore_large, 250, 282, 32, 32, "#CCC");
-    game.drawImage(game.images.gold_ore_small, 282, 282, 32, 32, "gold");
-    game.drawImage(game.images.gold_ore_small, 282, 282+32, 32, 32, "gold");
-    game.drawImage(game.images.gold_ore_small, 282+32, 282+32, 32, 32, "gold");
+    game.objects[5][5] = game.tiles.gold_ore_large;
+    game.objects[6][6] = game.tiles.gold_ore_large;
+    game.objects[6][5] = game.tiles.gold_ore_large;
+    game.objects[5][6] = game.tiles.gold_ore_small;
+    game.objects[140][140] = game.tiles.gold_ore_small;
+    game.objects[149][149] = game.tiles.gold_ore_small;
 
     game.$mousedown.text(game.mouse.down);
     game.$rightclick.text(game.mouse.rightclick);

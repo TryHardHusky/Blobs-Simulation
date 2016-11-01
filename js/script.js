@@ -38,6 +38,7 @@ game.$splash            = $(".loading").find('h4');
 game.$loading           = $(".loading");
 game.$viewport          = $(".viewport");
 game.$selected          = $("section.selected");
+game.$help              = $("#help");
 
 game.paths              = {};
 game.paths.images       = "img/";
@@ -52,6 +53,7 @@ game.images.grass_light         = "grass_light.png";
 game.images.dirt_dark           = "dirt_dark.png";
 game.images.dirt_light          = "dirt_light.png";
 game.images.crater              = "crater.png";
+
 game.images.bush_small          = "bush_small.png";
 game.images.gold_ore_small      = "gold_ore_small.png";
 game.images.gold_ore_large      = "gold_ore_large.png";
@@ -177,6 +179,9 @@ game.preload = function(){
 
 game.preload_complete = function(){
     game.$loading.fadeOut();
+    setTimeout(function(){
+        game.$help.fadeOut();
+    }, 2500);
     game.tick();
 };
 

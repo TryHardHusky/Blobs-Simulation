@@ -2,8 +2,8 @@ var game                = {};
 game.tile               = {};
 game.tile.size          = 32;
 
-game.colcount           = 50;
-game.rowcount           = 50;
+game.colcount           = 99;
+game.rowcount           = 99;
 game.tilecount          = game.colcount * game.rowcount;
 
 game.width              = Math.floor(game.colcount * game.tile.size);
@@ -24,6 +24,12 @@ game.viewport.width     = 700;
 game.viewport.speed     = 10;
 game.viewport._speed    = game.viewport.speed;
 game.viewport.boost     = 3;
+game.viewport.col       = {};
+game.viewport.row       = {};
+game.viewport.col.min   = 0;
+game.viewport.col.max   = 25;
+game.viewport.row.min   = 0;
+game.viewport.row.max   = 25;
 
 // Elements
 game.$minimap           = $("#minimap");
@@ -39,6 +45,7 @@ game.$loading           = $(".loading");
 game.$viewport          = $(".viewport");
 game.$selected          = $("section.selected");
 game.$help              = $("#help");
+game.$viewmax           = $(".viewmax");
 
 game.paths              = {};
 game.paths.images       = "img/";
@@ -99,6 +106,7 @@ game.minimap            = game.$minimap[0];
 game.minimap.width      = 140;
 game.minimap.height     = 140;
 game.minimap_context    = game.minimap.getContext('2d');
+game.minimap_disabled   = false;
 
 game.mouse              = {};
 game.mouse.rightclick   = false;
@@ -274,15 +282,43 @@ game.check_input = function(){
     // Make sure there are no floats
     game.viewport.x = Math.floor(game.viewport.x);
     game.viewport.y = Math.floor(game.viewport.y);
+    // Minmax to prevent massive loops on a large map
+    game.viewport.col.min = Math.floor(game.viewport.x / 32) - 5;
+    if(game.viewport.col.min < 0) game.viewport.col.min = 0;
+    game.viewport.col.max = game.viewport.col.min + 30;
+    if(game.viewport.col.max > game.colcount) game.viewport.col.max = game.colcount;
+    game.viewport.row.min = Math.floor(game.viewport.y / 32) - 5;
+    if(game.viewport.row.min < 0) game.viewport.row.min = 0;
+    game.viewport.row.max = game.viewport.row.min + 30;
+    if(game.viewport.row.max > game.rowcount) game.viewport.row.max = game.rowcount;
+};
+
+game.render_minimap = function(){
+    for(var c = 0; c < game.colcount; c++){
+        for(var r = 0; r < game.rowcount; r++){
+            var tile = game.objects[c][r];
+            if(game.tileimg[tile.type] != null){
+                game.fillRect(
+                    (c * game.tile.size),
+                    (r * game.tile.size),
+                    game.tile.size,
+                    game.tile.size,
+                    game.tiles[game.tileimg[tile.type]].color
+                )
+            }
+        }
+    }
 };
 
 game.draw = function(){
-    var nw = game.width / game.minimap.width;
-    var nh = game.height / game.minimap.height;
     game.zone_ctx.clearRect(0, 0, game.zone.width, game.zone.height);
-
-    for(var c = 0; c < game.colcount; c++){
-        for(var r = 0; r < game.rowcount; r++){
+    if(!game.minimap_disabled && game.colcount < 100 && game.rowcount < 100) game.render_minimap();
+    else{
+        game.minimap_disabled = true;
+        game.$minimap.hide();
+    }
+    for(var c = game.viewport.col.min; c < game.viewport.col.max; c++){
+        for(var r = game.viewport.row.min; r < game.viewport.row.max; r++){
             game.zone_ctx.drawImage(
                 game.images.grass_dark,
                 0,
@@ -307,13 +343,6 @@ game.draw = function(){
                     game.tile.size,
                     game.tile.size
                 );
-                game.fillRect(
-                    (c * game.tile.size),
-                    (r * game.tile.size),
-                    game.tile.size,
-                    game.tile.size,
-                    game.tiles[game.tileimg[tile.type]].color
-                )
             }
         }
     }
@@ -344,6 +373,11 @@ game.tick = function(){
         game.viewport.x + "-" + (game.viewport.x + game.viewport.width) + " " +
         game.viewport.y + "-" + (game.viewport.y + game.viewport.height)
     );
+    game.$viewmax.text(
+        game.viewport.row.min + "," + game.viewport.row.max +
+        " - " +
+        game.viewport.col.min + "," + game.viewport.col.max
+    )
 
     for(var i in game.stock){
         var item = game.stock[i];
@@ -370,15 +404,8 @@ game.draw_minimap_border = function(){
     game.minimap_context.closePath();
 };
 
-game.drawImage = function(img, x, y, w, h, c){
-    game.context.drawImage( img, x - game.viewport.x, y - game.viewport.y, w, h );
-    var nw = game.width / game.minimap.width;
-    var nh = game.height / game.minimap.height;
-    game.minimap_context.fillStyle = c || "#000";
-    game.minimap_context.fillRect(x / nw, y / nh, w / nw, h / nh);
-}
-
 game.fillRect = function(x, y, w, h, c){
+    if(game.minimap_disabled) return;
     var nw = game.width / game.minimap.width;
     var nh = game.height / game.minimap.height;
     game.minimap_context.fillStyle = c;
@@ -447,6 +474,10 @@ game.$canvas.mousemove(function(e){
     var off = game.$canvas.offset();
     game.mouse.x = Math.floor(e.pageX - off.left) + (game.viewport.x);
     game.mouse.y = Math.floor(e.pageY - off.top)  + (game.viewport.y);
+    if(game.mouse.x < 0) game.mouse.x = 0;
+    if(game.mouse.y < 0) game.mouse.y = 0;
+    if(game.mouse.x > game.width)  game.mouse.x = game.width;
+    if(game.mouse.y > game.height) game.mouse.y = game.height;
 
     game.mouse.tx = Math.floor(game.mouse.x / game.tile.size);
     game.mouse.ty = Math.floor(game.mouse.y / game.tile.size);
